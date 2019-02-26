@@ -10,19 +10,23 @@ submitButton.addEventListener("click", function() {
     let key = document.getElementById('name').value;
     if(key === '') return;
 
+    SaveWorkSpace(key);
+});
+
+function SaveWorkSpace(name){
     GetCurrentTabs((tabs)=>{
-        chrome.storage.sync.set({ [key] : tabs});
+        chrome.storage.sync.set({ [name] : tabs});
     })
     
-    if(workspaces[key] === undefined)
+    if(workspaces[name] === undefined)
     {
-        workspaces[key] = key;
-        let id = 'workspace-' + key;
+        workspaces[name] = name;
+        let id = 'workspace-' + name;
         UpdateWorkspaceListView();
         chrome.storage.sync.set({ workspaces : workspaces});
         document.getElementById('notification').innerHTML = 'submited';
     }
-});
+}
 
 workspaceList.onchange = UpdateUrlList;
 
@@ -30,10 +34,11 @@ function UpdateUrlList(){
     var tmp = '';
     chrome.storage.sync.get([workspaceList.value], (result)=>{
         let list = result[workspaceList.value];
-        for(let i = 0 ; i < list.length; ++i){
-            let url = list[i]
-            tmp += '<li class="mdl-list__item" id="' + url + '">' + extractHostname(url) + '</li>'
-        }
+        if(list)
+            for(let i = 0 ; i < list.length; ++i){
+                let url = list[i]
+                tmp += '<li class="mdl-list__item" id="' + url + '">' + extractHostname(url) + '</li>'
+            }
         urlList.innerHTML = tmp;
     });
 }
@@ -44,8 +49,13 @@ document.getElementById('open-workspace').onclick = function(){
     });
 };
 
+document.getElementById('update-workspace').onclick = function(){
+    notification.innerHTML = "Updated " + workspaceList.value;
+    SaveWorkSpace(workspaceList.value);
+};
+
 document.getElementById('remove-workspace').onclick = function(){
-    notification.innerHTML = workspaces[workspaceList.value];
+    notification.innerHTML = "Deleted " + workspaces[workspaceList.value];
     delete workspaces[workspaceList.value];
     chrome.storage.sync.set({ workspaces : workspaces}, ()=>{    
         UpdateWorkspaceListView();
